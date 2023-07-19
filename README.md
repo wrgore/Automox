@@ -31,3 +31,4 @@ _Requires Automox organization ID if you have more than one organization within 
 Requires Automox API key.<br>_
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------
+# KQL
