@@ -2,13 +2,20 @@
 Python for interacting with Automox API.
 
 **automover.py**
-1. Queries Automox API for device information, takes the device names from the returned JSON.<br>
-_Requires Automox organization ID if you have more than one organization within your tenant.<br>
-Requires Automox API key.<br>_
-2. Takes input for desired vulnerability levels (Critical, High, Medium, Low, All, or a combination of those).
-3. Formats a KQL Query based on the input. The KQL Query will automatically output in the format that Automox expects in its Remediation tool.
+Primary Function - Create and Upload CSV to Automox Remediation Tool: 
+1. Queries Automox for list of devices and checks the list of devices for vulnerabilities against DefenderTVM.
+2. Creates csv file in Automox Remediation format.
+3. Uploads the file to Automox.
 
-**Known Issues**
+Secondary Function - Get Vulnerability Stats:
+1. Queries Automox for list of devices and checks them agaisnt DefenderTVM.
+2. Returns list of statistics which includes: total systems, count of vulnerabilities by severity, and count of vulnerabilities by severity which are past due for remediation.
+
+_Requires Automox organization ID if you have more than one organization within your tenant.
+Requires Automox API key.
+Requires Registered Application in Azure Tenant_
+
+**automover.py Known Issues**
 1. Input checking for 1 vulnerability does not check validInput list.
 2. Input checking for 3 vulnerabilities has error where it does not check third list item against validInput list.
 3. Input checking for 4 vulnerabilities or All does not check validInput list.
