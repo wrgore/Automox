@@ -18,9 +18,8 @@ Requires Registered Application in Azure Tenant_
 
 **automover.py Known Issues**
 
-1. Input checking for 1 vulnerability does not check validInput list.
-2. Input checking for 3 vulnerabilities has error where it does not check third list item against validInput list.
-3. Input checking for 4 vulnerabilities or All does not check validInput list.
+1. Input checking for 3 vulnerabilities has error where it does not check third list item against validInput list.
+2. Input checking for 4 vulnerabilities or All does not check validInput list.
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------
 **device-list.py**
