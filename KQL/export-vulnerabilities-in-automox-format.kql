@@ -1,0 +1,10 @@
+//Get List of All Vulnerabilities on All Systems
+//Note: Un-comment commented lines 5 and 7 in query to only query specific devices.
+//Note: To specify severity, uncomment line 8. Otherwise all severities will be returned.
+//Note: This query summarizes vulnerabilities into the format expected by the Automox Remediations Tool.
+
+//let devices = dynamic(['device-name1, device-name2']);
+DeviceTvmSoftwareVulnerabilities
+//| where DeviceName in~ (devices)
+//| where VulnerabilitySeverityLevel =~ "Critical"
+| summarize by DeviceName, CveId, VulnerabilitySeverityLevel
