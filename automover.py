@@ -44,9 +44,9 @@ def kqlHelp():
 
 #Obtain OAuth Token for Microsoft Defender API and Pass it Back to Originating Caller
 def defenderAuth():
-    tenantId = 'TENANT-ID-GOES-HERE' # SENSITIVE - Paste your own tenant ID here
-    appId = 'APP-ID-GOES-HERE' # SENSITIVE - Paste your own app ID here
-    appSecret = 'APP-SECRET-GOES-HERE' # HIGHLY SENSITIVE - Paste your own app secret here
+    tenantId = 'Tenant-ID' # SENSITIVE - Paste your own tenant ID here
+    appId = 'App-ID' # SENSITIVE - Paste your own app ID here
+    appSecret = 'App-Secret' # HIGHLY SENSITIVE - Paste your own app secret here
 
     url = "https://login.microsoftonline.com/%s/oauth2/token" % (tenantId)
 
@@ -72,10 +72,10 @@ def automoxExport():
     url = "https://console.automox.com/api/servers"
 
     query = {
-        "o": "AUTOMOX-ORG-ID-GOES-HERE", #SENSITIVE - Automox Organization ID Goes Here
+        "o": "Automox-OrgID", #SENSITIVE - Automox Organization ID Goes Here
     }
 
-    headers = {"Authorization": "Bearer AUTOMOX-API-KEY-GOES-HERE"} #HIGHLY SENSITIVE - Automox API Key Goes Here
+    headers = {"Authorization": "Bearer Automox-API-Key"} #HIGHLY SENSITIVE - Automox API Key Goes Here
 
     print("Connecting to Automox API...")    
     response = requests.get(url, headers=headers, params=query)
@@ -88,7 +88,7 @@ def automoxExport():
 #Build the KQL Query Based on Input
 def queryBuilder():
     validInput = ['Critical', 'High', 'Medium', 'Low', 'All']
-    severity = input("Please indicate the vulnerability severity level(s) for the report (For help use -h.) >  ")
+    severity = input("Please indicate the vulnerability severity level(s) for the report (For help use -h.):  ")
     severityList = severity.split(" + ")
     if severity == '-h' or severity == 'help':
         kqlHelp()
@@ -100,19 +100,25 @@ def queryBuilder():
          if severityList[0] and severityList[1] in validInput:
             kql = (f"let automoxDevices = dynamic({deviceList}); DeviceTvmSoftwareVulnerabilities | where DeviceName in~ (automoxDevices) | where VulnerabilitySeverityLevel =~ '{severityList[0]}' or  VulnerabilitySeverityLevel =~ '{severityList[1]}'| summarize by DeviceName, CveId, VulnerabilitySeverityLevel")
          else:
-            print("Invalid input. Please see the usage page and try again.")
-            kqlHelp()
+            print("\n[!] Invalid input. Please refer to the help page for proper usage by typing -h.\n\nRe-initializing program...")
+            main()
     elif len(severityList) == 3:
-         if severityList[0] and severityList[1] in validInput:
+         if severityList[0] and severityList[1] and severityList[2] in validInput:
             kql = (f"let automoxDevices = dynamic({deviceList}); DeviceTvmSoftwareVulnerabilities | where DeviceName in~ (automoxDevices) | where VulnerabilitySeverityLevel =~ '{severityList[0]}' or  VulnerabilitySeverityLevel =~ '{severityList[1]}' or  VulnerabilitySeverityLevel =~ '{severityList[2]}'| summarize by DeviceName, CveId, VulnerabilitySeverityLevel")
          else:
-            print("Invalid input. Please see the usage page and try again.")
-            kqlHelp()
+            print("\n[!] Invalid input. Please refer to the help page for proper usage by typing -h.\n\nRe-initializing program...")
+            main()
     elif len(severityList) == 4 or severity == "All":
-        kql = (f"let automoxDevices = dynamic({deviceList}); DeviceTvmSoftwareVulnerabilities | where DeviceName in~ (automoxDevices) | summarize by DeviceName, CveId, VulnerabilitySeverityLevel")
+        if severityList[0] == "All":
+            kql = (f"let automoxDevices = dynamic({deviceList}); DeviceTvmSoftwareVulnerabilities | where DeviceName in~ (automoxDevices) | summarize by DeviceName, CveId, VulnerabilitySeverityLevel")
+        elif severityList[0] and severityList[1] and severityList[2] and severityList[3] in validInput:
+            kql = (f"let automoxDevices = dynamic({deviceList}); DeviceTvmSoftwareVulnerabilities | where DeviceName in~ (automoxDevices) | summarize by DeviceName, CveId, VulnerabilitySeverityLevel")
+        else:
+            print("\n[!] Invalid input. Please refer to the help page for proper usage by typing -h.\n\nRe-initializing program...")
+            main()
     else:
-        print("Invalid input. Please refer to the help page for proper usage.")
-        kqlHelp()
+        print("[!] Invalid input. Please refer to the help page for proper usage by typing -h.\n\nRe-initializing program...")
+        main()
 
     defenderQuery(kql, severity)
 
@@ -182,7 +188,7 @@ def transformer(fileName):
 
 #Connects to Automox API and Uploads the CSV
 def autoLoader(fileName):
-    org_id = "AUTOMOX-ORG-ID-GOES-HERE" #SENSITIVE - Paste your Automox orgID here
+    org_id = "Automox-OrgID" #SENSITIVE - Paste your Automox orgID here
     type = "patch"
     url = "https://console.automox.com/api/orgs/" + org_id + "/tasks/" + type + "/batches/upload"
 
@@ -192,7 +198,7 @@ def autoLoader(fileName):
 
     headers = {
     "Content-Type": m.content_type,
-    "Authorization": "Bearer AUTOMOX-API-KEY-GOES-HERE", #HIGHLY SENSITIVE - Paste your Automox API Key Here
+    "Authorization": "Bearer Automox-API-Key", #HIGHLY SENSITIVE - Paste your Automox API Key Here
     }
 
     response = requests.post(url, headers=headers, data=m)
@@ -203,16 +209,27 @@ def autoLoader(fileName):
 
 #Function to Get Vulnerability Metrics from Defender and Append to Local Spreadsheet
 def vulnStats():
+    print("Running authentication sequence...")
     aadToken = defenderAuth()
-
+    
+    print("Building metrics...")
     statQuery = []
     stats = []
 
-    #Count of Devices with Vulnerabilities Outside of Acceptable Remediation Timeline by Severity
+    totalSystems = len(deviceList) #Get Total Systems
+
+    #Count of Vulnerabilities Outside of Acceptable Remediation Timeline by Severity
     statQuery.append(f"let automoxDevices = dynamic({deviceList}); DeviceTvmSoftwareVulnerabilitiesKB | join DeviceTvmSoftwareVulnerabilities on CveId | where DeviceName in~ (automoxDevices) | where (VulnerabilitySeverityLevel =~ 'Critical' and PublishedDate < ago(14d)) or (VulnerabilitySeverityLevel =~ 'High' and PublishedDate < ago(45d)) or (VulnerabilitySeverityLevel =~ 'Medium' and PublishedDate < ago(90d)) or (VulnerabilitySeverityLevel =~ 'Low' and PublishedDate < ago(90d)) | summarize Total = count() by VulnerabilitySeverityLevel | sort by VulnerabilitySeverityLevel asc")
     #Count of all Vulnerabilities by Severity
     statQuery.append(f"let automoxDevices = dynamic({deviceList}); DeviceTvmSoftwareVulnerabilities | where DeviceName in~ (automoxDevices) | summarize Vulns=count() by VulnerabilitySeverityLevel |sort by VulnerabilitySeverityLevel asc")
-
+    #Count of Devices with Critical Vulnerabilities Outside of 14 Days
+    statQuery.append(f"let automoxDevices = dynamic({deviceList}); DeviceTvmSoftwareVulnerabilitiesKB | join DeviceTvmSoftwareVulnerabilities on CveId | where DeviceName in~ (automoxDevices) | where (VulnerabilitySeverityLevel =~ 'Critical' and PublishedDate < ago(14d)) | summarize Metric = (count_distinct(DeviceId) * 100) / {totalSystems} ")
+    #Count of Devices with High Vulnerabilities Outside of 45 Days
+    statQuery.append(f"let automoxDevices = dynamic({deviceList}); DeviceTvmSoftwareVulnerabilitiesKB | join DeviceTvmSoftwareVulnerabilities on CveId | where DeviceName in~ (automoxDevices) | where (VulnerabilitySeverityLevel =~ 'High' and PublishedDate < ago(45d)) | summarize Metric = (count_distinct(DeviceId) * 100) / {totalSystems} ")
+    #Count of Devices with Critical Vulnerabilities Outside of 14 Days
+    statQuery.append(f"let automoxDevices = dynamic({deviceList}); DeviceTvmSoftwareVulnerabilitiesKB | join DeviceTvmSoftwareVulnerabilities on CveId | where DeviceName in~ (automoxDevices) | where (VulnerabilitySeverityLevel =~ 'Medium' or VulnerabilitySeverityLevel =~ 'Low' and PublishedDate < ago(90d)) | summarize Metric = (count_distinct(DeviceId) * 100) / {totalSystems} ")
+    
+    
     for query in statQuery:
         url = "https://api.securitycenter.microsoft.com/api/advancedqueries/run"
         headers = { 
@@ -229,22 +246,28 @@ def vulnStats():
         #schema = jsonResponse["Schema"]
         results = jsonResponse["Results"]
         stats.append(results)
-    
-    totalSystems = len(deviceList) #Get Total Systems
 
-    #Print Vulnerability Report. Index Postion [0][X] is Past Due. Index Postion [1][X] is Total.
+    #Print Vulnerability Report. Index Postion [0][X] is Past Due. Index Postion [1][X] is Total. Index Postions [2 -4][0] Are Specific KRI Percentages.
     print("\n----------------------------------------------------------------------------------------------------------------")
+
     print(f"\nTotal Systems: {totalSystems}")
+
     print(f"\nVULNERABILITIES PAST DUE DATE\n")
     print(f"{stats[0][0]}")
     print(f"{stats[0][1]}")
     print(f"{stats[0][3]}")
     print(f"{stats[0][2]}")
+
     print(f"\nTOTAL VULNERABILITIES\n")
     print(f"{stats[1][0]}")
     print(f"{stats[1][1]}")
     print(f"{stats[1][3]}")
     print(f"{stats[1][2]}")
+
+    print(f"\nKEY RISK INDICATORS\n")
+    print(f"Percent of Assets with Critical Vulnerabilities Older than 14 Days: {stats[2]}%")
+    print(f"Percent of Assets with High Vulnerabilities Older than 45 Days: {stats[3]}%")
+    print(f"Percent of Assets with Low or Medium Vulnerabilities Older than 90 Days: {stats[4]}%")
     print("----------------------------------------------------------------------------------------------------------------\n")
     
 #Primary Flow Control Function
