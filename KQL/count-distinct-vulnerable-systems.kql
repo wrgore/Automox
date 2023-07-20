@@ -1,5 +1,5 @@
 //Count Systems with Specific Vulnerability Severity That Are Outside of Acceptable Time to Remediation
-//Note: Un-comment commented lines in querty to only query specific devices.
+//Note: Un-comment commented lines in query to only query specific devices.
 
 //let devices = dynamic(['system-name']);
 DeviceTvmSoftwareVulnerabilitiesKB
