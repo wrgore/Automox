@@ -1,0 +1,8 @@
+//Get Count of All Vulnerabilities (Unique CVEs, Per Unique System)
+//Note: Un-comment commented lines in query to only query specific devices.
+
+//let automoxDevices = dynamic(['device-name1, device-name2']);
+DeviceTvmSoftwareVulnerabilities
+//| where DeviceName in~ (automoxDevices)
+|summarize Vulns=count() by VulnerabilitySeverityLevel
+|sort by VulnerabilitySeverityLevel asc;
