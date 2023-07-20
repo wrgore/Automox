@@ -1,0 +1,11 @@
+//Get Count of All Vulnerabilities (Unique CVEs, Per Unique System) That Are Past Acceptable Remediation Time
+//Note: Un-comment commented lines in query to only query specific devices.
+
+//let devices = dynamic(['system-one, system-two']);
+DeviceTvmSoftwareVulnerabilitiesKB
+| join DeviceTvmSoftwareVulnerabilities on CveId
+//| where DeviceName in~ (devices)
+| where (VulnerabilitySeverityLevel =~ "Critical" and PublishedDate < ago(7d)) or (VulnerabilitySeverityLevel =~ "High" and PublishedDate < ago(30d))
+or (VulnerabilitySeverityLevel =~ "Medium" and PublishedDate < ago(45d)) or (VulnerabilitySeverityLevel =~ "Low" and PublishedDate < ago(90d))
+| summarize Total = count() by VulnerabilitySeverityLevel
+| sort by VulnerabilitySeverityLevel asc 
