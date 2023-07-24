@@ -229,15 +229,14 @@ def vulnStats():
     #Count of Devices with Critical Vulnerabilities Outside of 14 Days
     statQuery.append(f"let automoxDevices = dynamic({deviceList}); DeviceTvmSoftwareVulnerabilitiesKB | join DeviceTvmSoftwareVulnerabilities on CveId | where DeviceName in~ (automoxDevices) | where (VulnerabilitySeverityLevel =~ 'Medium' or VulnerabilitySeverityLevel =~ 'Low' and PublishedDate < ago(90d)) | summarize Metric = (count_distinct(DeviceId) * 100) / {totalSystems} ")
     
-    
-    for query in statQuery:
-        url = "https://api.securitycenter.microsoft.com/api/advancedqueries/run"
-        headers = { 
-            'Content-Type' : 'application/json',
-            'Accept' : 'application/json',
-            'Authorization' : "Bearer " + aadToken
-        }
+    url = "https://api.securitycenter.microsoft.com/api/advancedqueries/run"
+    headers = { 
+        'Content-Type' : 'application/json',
+        'Accept' : 'application/json',
+        'Authorization' : "Bearer " + aadToken
+    }
 
+    for query in statQuery:
         data = json.dumps({ 'Query' : query }).encode("utf-8")
 
         req = urllib.request.Request(url, data, headers)
