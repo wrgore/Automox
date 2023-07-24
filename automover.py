@@ -252,21 +252,21 @@ def vulnStats():
     print(f"\nTotal Systems: {totalSystems}")
 
     print(f"\nVULNERABILITIES PAST DUE DATE\n")
-    print(f"{stats[0][0]}")
-    print(f"{stats[0][1]}")
-    print(f"{stats[0][3]}")
-    print(f"{stats[0][2]}")
+    print(str(stats[0][0]).replace("{'VulnerabilitySeverityLevel': ", "").replace("'", "").replace("Total:", "").replace(","," - ").replace("}", ""))
+    print(str(stats[0][1]).replace("{'VulnerabilitySeverityLevel': ", "").replace("'", "").replace("Total:", "").replace(","," - ").replace("}", ""))
+    print(str(stats[0][3]).replace("{'VulnerabilitySeverityLevel': ", "").replace("'", "").replace("Total:", "").replace(","," - ").replace("}", ""))
+    print(str(stats[0][2]).replace("{'VulnerabilitySeverityLevel': ", "").replace("'", "").replace("Total:", "").replace(","," - ").replace("}", ""))
 
     print(f"\nTOTAL VULNERABILITIES\n")
-    print(f"{stats[1][0]}")
-    print(f"{stats[1][1]}")
-    print(f"{stats[1][3]}")
-    print(f"{stats[1][2]}")
+    print(str(stats[1][0]).replace("{'VulnerabilitySeverityLevel': ", "").replace("'", "").replace("Vulns:", "").replace(","," - ").replace("}", ""))
+    print(str(stats[1][1]).replace("{'VulnerabilitySeverityLevel': ", "").replace("'", "").replace("Vulns:", "").replace(","," - ").replace("}", ""))
+    print(str(stats[1][3]).replace("{'VulnerabilitySeverityLevel': ", "").replace("'", "").replace("Vulns:", "").replace(","," - ").replace("}", ""))
+    print(str(stats[1][2]).replace("{'VulnerabilitySeverityLevel': ", "").replace("'", "").replace("Vulns:", "").replace(","," - ").replace("}", ""))
 
     print(f"\nKEY RISK INDICATORS\n")
-    print(f"Percent of Assets with Critical Vulnerabilities Older than 14 Days: {stats[2]}%")
-    print(f"Percent of Assets with High Vulnerabilities Older than 45 Days: {stats[3]}%")
-    print(f"Percent of Assets with Low or Medium Vulnerabilities Older than 90 Days: {stats[4]}%")
+    print(f"Percent of Assets with Critical Vulnerabilities Older than 14 Days: " + str(stats[2]).replace("[{'Metric': ", "").replace("}]", "%"))
+    print(f"Percent of Assets with High Vulnerabilities Older than 45 Days: " + str(stats[3]).replace("[{'Metric': ", "").replace("}]", "%"))
+    print(f"Percent of Assets with Low or Medium Vulnerabilities Older than 90 Days: " + str(stats[4]).replace("[{'Metric': ", "").replace("}]", "%"))
     print("----------------------------------------------------------------------------------------------------------------\n")
     
 #Primary Flow Control Function
