@@ -218,15 +218,21 @@ def vulnStats():
 
     totalSystems = len(deviceList) #Get Total Systems
 
-    #Count of Vulnerabilities Outside of Acceptable Remediation Timeline by Severity
-    statQuery.append(f"let automoxDevices = dynamic({deviceList}); DeviceTvmSoftwareVulnerabilitiesKB | join DeviceTvmSoftwareVulnerabilities on CveId | where DeviceName in~ (automoxDevices) | where (VulnerabilitySeverityLevel =~ 'Critical' and PublishedDate < ago(14d)) or (VulnerabilitySeverityLevel =~ 'High' and PublishedDate < ago(45d)) or (VulnerabilitySeverityLevel =~ 'Medium' and PublishedDate < ago(90d)) or (VulnerabilitySeverityLevel =~ 'Low' and PublishedDate < ago(90d)) | summarize Total = count() by VulnerabilitySeverityLevel | sort by VulnerabilitySeverityLevel asc")
-    #Count of all Vulnerabilities by Severity
+    #Count Total Vulnerable Systems [0]
+    statQuery.append(f"let automoxDevices = dynamic({deviceList}); DeviceTvmSoftwareVulnerabilities | where DeviceName in~ (automoxDevices) | summarize Total = count_distinct(DeviceId)")
+    #Count of all Vulnerabilities by Severity [0]
     statQuery.append(f"let automoxDevices = dynamic({deviceList}); DeviceTvmSoftwareVulnerabilities | where DeviceName in~ (automoxDevices) | summarize Vulns=count() by VulnerabilitySeverityLevel |sort by VulnerabilitySeverityLevel asc")
-    #Count of Devices with Critical Vulnerabilities Outside of 14 Days
+    #Count of Vulnerabilities Outside of Acceptable Remediation Timeline by Severity [1]
+    statQuery.append(f"let automoxDevices = dynamic({deviceList}); DeviceTvmSoftwareVulnerabilitiesKB | join DeviceTvmSoftwareVulnerabilities on CveId | where DeviceName in~ (automoxDevices) | where (VulnerabilitySeverityLevel =~ 'Critical' and PublishedDate < ago(14d)) or (VulnerabilitySeverityLevel =~ 'High' and PublishedDate < ago(45d)) or (VulnerabilitySeverityLevel =~ 'Medium' and PublishedDate < ago(90d)) or (VulnerabilitySeverityLevel =~ 'Low' and PublishedDate < ago(90d)) | summarize Total = count() by VulnerabilitySeverityLevel | sort by VulnerabilitySeverityLevel asc")
+    #Count of Systems with Vulnerabilities by Severity [2]
+    statQuery.append(f"let automoxDevices = dynamic({deviceList}); DeviceTvmSoftwareVulnerabilities | where DeviceName in~ (automoxDevices) | summarize Total = count_distinct(DeviceId) by VulnerabilitySeverityLevel | sort by VulnerabilitySeverityLevel asc")
+    #Count of Systems with Vulnerabilities Outside of Acceptable Remediation Timeline by Severity [3]
+    statQuery.append(f"let automoxDevices = dynamic({deviceList}); DeviceTvmSoftwareVulnerabilitiesKB | join DeviceTvmSoftwareVulnerabilities on CveId | where DeviceName in~ (automoxDevices) | where (VulnerabilitySeverityLevel =~ 'Critical' and PublishedDate < ago(14d)) or (VulnerabilitySeverityLevel =~ 'High' and PublishedDate < ago(45d)) or (VulnerabilitySeverityLevel =~ 'Medium' and PublishedDate < ago(90d)) or (VulnerabilitySeverityLevel =~ 'Low' and PublishedDate < ago(90d)) | summarize Total = count_distinct(DeviceId) by VulnerabilitySeverityLevel | sort by VulnerabilitySeverityLevel asc")
+    #Percent of Devices with Critical Vulnerabilities Outside of 14 Days [4]
     statQuery.append(f"let automoxDevices = dynamic({deviceList}); DeviceTvmSoftwareVulnerabilitiesKB | join DeviceTvmSoftwareVulnerabilities on CveId | where DeviceName in~ (automoxDevices) | where (VulnerabilitySeverityLevel =~ 'Critical' and PublishedDate < ago(14d)) | summarize Metric = (count_distinct(DeviceId) * 100) / {totalSystems} ")
-    #Count of Devices with High Vulnerabilities Outside of 45 Days
+    #Percent of Devices with High Vulnerabilities Outside of 45 Days [5]
     statQuery.append(f"let automoxDevices = dynamic({deviceList}); DeviceTvmSoftwareVulnerabilitiesKB | join DeviceTvmSoftwareVulnerabilities on CveId | where DeviceName in~ (automoxDevices) | where (VulnerabilitySeverityLevel =~ 'High' and PublishedDate < ago(45d)) | summarize Metric = (count_distinct(DeviceId) * 100) / {totalSystems} ")
-    #Count of Devices with Critical Vulnerabilities Outside of 14 Days
+    #Percent of Devices with Critical Vulnerabilities Outside of 14 Days [6]
     statQuery.append(f"let automoxDevices = dynamic({deviceList}); DeviceTvmSoftwareVulnerabilitiesKB | join DeviceTvmSoftwareVulnerabilities on CveId | where DeviceName in~ (automoxDevices) | where (VulnerabilitySeverityLevel =~ 'Medium' or VulnerabilitySeverityLevel =~ 'Low' and PublishedDate < ago(90d)) | summarize Metric = (count_distinct(DeviceId) * 100) / {totalSystems} ")
     
     url = "https://api.securitycenter.microsoft.com/api/advancedqueries/run"
@@ -246,27 +252,41 @@ def vulnStats():
         results = jsonResponse["Results"]
         stats.append(results)
 
-    #Print Vulnerability Report. Index Postion [0][X] is Past Due. Index Postion [1][X] is Total. Index Postions [2 -4][0] Are Specific KRI Percentages.
+    #Print Vulnerability Report. Index Postion [0] is Total vulnerable Systems. Index Postion [1][X] is Total Vulnerabilities. Index Postion [2][X] is Past Due. Index Postion [3][X] is Total Vulnerable Systems. Index Postion [4][X] is Total Vulnerable Systems Past Due. Index Postions [5 - 7][0] Are Specific KRI Percentages.
     print("\n----------------------------------------------------------------------------------------------------------------")
 
     print(f"\nTotal Systems: {totalSystems}")
 
-    print(f"\nVULNERABILITIES PAST DUE DATE\n")
-    print(str(stats[0][0]).replace("{'VulnerabilitySeverityLevel': ", "").replace("'", "").replace("Total:", "").replace(","," - ").replace("}", ""))
-    print(str(stats[0][1]).replace("{'VulnerabilitySeverityLevel': ", "").replace("'", "").replace("Total:", "").replace(","," - ").replace("}", ""))
-    print(str(stats[0][3]).replace("{'VulnerabilitySeverityLevel': ", "").replace("'", "").replace("Total:", "").replace(","," - ").replace("}", ""))
-    print(str(stats[0][2]).replace("{'VulnerabilitySeverityLevel': ", "").replace("'", "").replace("Total:", "").replace(","," - ").replace("}", ""))
+    print(f"\nTotal Vulnerable Systems:" + str(stats[0]).replace("[{'Total':","").replace("}]",""))
 
-    print(f"\nTOTAL VULNERABILITIES\n")
+    print(f"\nTotal Vulnerabilities\n")
     print(str(stats[1][0]).replace("{'VulnerabilitySeverityLevel': ", "").replace("'", "").replace("Vulns:", "").replace(","," - ").replace("}", ""))
     print(str(stats[1][1]).replace("{'VulnerabilitySeverityLevel': ", "").replace("'", "").replace("Vulns:", "").replace(","," - ").replace("}", ""))
     print(str(stats[1][3]).replace("{'VulnerabilitySeverityLevel': ", "").replace("'", "").replace("Vulns:", "").replace(","," - ").replace("}", ""))
     print(str(stats[1][2]).replace("{'VulnerabilitySeverityLevel': ", "").replace("'", "").replace("Vulns:", "").replace(","," - ").replace("}", ""))
 
-    print(f"\nKEY RISK INDICATORS\n")
-    print(f"Percent of Assets with Critical Vulnerabilities Older than 14 Days: " + str(stats[2]).replace("[{'Metric': ", "").replace("}]", "%"))
-    print(f"Percent of Assets with High Vulnerabilities Older than 45 Days: " + str(stats[3]).replace("[{'Metric': ", "").replace("}]", "%"))
-    print(f"Percent of Assets with Low or Medium Vulnerabilities Older than 90 Days: " + str(stats[4]).replace("[{'Metric': ", "").replace("}]", "%"))
+    print(f"\nVulnerabilities Past Due Date\n")
+    print(str(stats[2][0]).replace("{'VulnerabilitySeverityLevel': ", "").replace("'", "").replace("Total:", "").replace(","," - ").replace("}", ""))
+    print(str(stats[2][1]).replace("{'VulnerabilitySeverityLevel': ", "").replace("'", "").replace("Total:", "").replace(","," - ").replace("}", ""))
+    print(str(stats[2][3]).replace("{'VulnerabilitySeverityLevel': ", "").replace("'", "").replace("Total:", "").replace(","," - ").replace("}", ""))
+    print(str(stats[2][2]).replace("{'VulnerabilitySeverityLevel': ", "").replace("'", "").replace("Total:", "").replace(","," - ").replace("}", ""))
+
+    print(f"\nTotal Vulnerable Systems\n")
+    print(str(stats[3][0]).replace("{'VulnerabilitySeverityLevel': ", "").replace("'", "").replace("Total:", "").replace(","," - ").replace("}", ""))
+    print(str(stats[3][1]).replace("{'VulnerabilitySeverityLevel': ", "").replace("'", "").replace("Total:", "").replace(","," - ").replace("}", ""))
+    print(str(stats[3][3]).replace("{'VulnerabilitySeverityLevel': ", "").replace("'", "").replace("Total:", "").replace(","," - ").replace("}", ""))
+    print(str(stats[3][2]).replace("{'VulnerabilitySeverityLevel': ", "").replace("'", "").replace("Total:", "").replace(","," - ").replace("}", ""))
+
+    print(f"\nTotal Vulnerable Systems Past Due\n")
+    print(str(stats[4][0]).replace("{'VulnerabilitySeverityLevel': ", "").replace("'", "").replace("Total:", "").replace(","," - ").replace("}", ""))
+    print(str(stats[4][1]).replace("{'VulnerabilitySeverityLevel': ", "").replace("'", "").replace("Total:", "").replace(","," - ").replace("}", ""))
+    print(str(stats[4][3]).replace("{'VulnerabilitySeverityLevel': ", "").replace("'", "").replace("Total:", "").replace(","," - ").replace("}", ""))
+    print(str(stats[4][2]).replace("{'VulnerabilitySeverityLevel': ", "").replace("'", "").replace("Total:", "").replace(","," - ").replace("}", ""))
+
+    print(f"\nKey Performance Indicators\n")
+    print(f"Percent of Assets with Critical Vulnerabilities Older than 14 Days: " + str(stats[5]).replace("[{'Metric': ", "").replace("}]", "%"))
+    print(f"Percent of Assets with High Vulnerabilities Older than 45 Days: " + str(stats[6]).replace("[{'Metric': ", "").replace("}]", "%"))
+    print(f"Percent of Assets with Low or Medium Vulnerabilities Older than 90 Days: " + str(stats[7]).replace("[{'Metric': ", "").replace("}]", "%"))
     print("----------------------------------------------------------------------------------------------------------------\n")
     
 #Primary Flow Control Function
