@@ -14,6 +14,7 @@ def logo():
     print(" //_ \| | | | __/ _ \ /    \ / _ \ \ / / _ \ '__|")
     print("/  _  \ |_| | || (_) / /\/\ \ (_) \ V /  __/ |   ")
     print("\_/ \_/\__,_|\__\___/\/    \/\___/ \_/ \___|_|   by rg\n")
+    print("                                         v1.2\n")
 
 #Main User's Guide - Contains All Product Guidance
 def help():
