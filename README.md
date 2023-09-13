@@ -62,4 +62,21 @@ _Requires Automox organization ID if you have more than one organization within 
 Requires Automox API key.<br>_
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------
-# KQL
+# Metroid
+
+**metroid.py**
+
+Written in Python3.
+
+Metroid is a tool built for querying DefenderTVM to provide vulnerability reporting and metrics. To utilize Metroid, you will need the following:
+1) Access to an active Microsoft 365 Defender account and Azure tenant.
+2) An API key that allows for querying https://api.securitycenter.microsoft.com
+   https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/exposed-apis-create-app-nativeapp?view=o365-worldwide
+3) A list of systems in CSV format. If using excel, the format should be CSV MS-DOS to prevent ingestion errors.
+
+**Troubleshooting Help**
+
+KQL and Defender API Documentation
+    <li>https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/run-advanced-query-sample-python?view=o365-worldwide</li>
+    <li>https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/get-all-vulnerabilities?view=o365-worldwide</li>
+    <li>https://stackoverflow.com/questions/55415534/why-is-azure-storage-api-permission-not-listed-in-azure-portal</li>
