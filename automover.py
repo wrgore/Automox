@@ -153,7 +153,7 @@ def defenderQuery(kql, severity):
        print('\n[!] A File with this name already exists. Please remove the file from the directory or choose a different query.\nRe-initiating program...\n')
        main()
     else:
-        vulnFile = open(f"{fileName}", 'w')
+        vulnFile = open(f"{fileName}", 'w', newline='')
         vulns = csv.writer(vulnFile)
         vulns.writerow(results[0].keys())
         for result in results:
@@ -170,12 +170,12 @@ def defenderQuery(kql, severity):
 #Transforms Column Headers to Correct Format and Passes to Automox Upload Function
 def transformer(fileName):
    with open(fileName) as f:
-      columnName = f.read().replace('DeviceName', 'Hostname*')
+      columnName = f.read().replace('DeviceName', 'Hostname')
    with open(fileName, 'w') as f:
       f.write(columnName)
       f.close()
    with open(fileName) as f:
-      columnName = f.read().replace('CveId', 'CVE ID*')
+      columnName = f.read().replace('CveId', 'CVE ID')
    with open(fileName, 'w') as f:
       f.write(columnName)
       f.close()
