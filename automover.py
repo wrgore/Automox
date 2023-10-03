@@ -14,7 +14,7 @@ def logo():
     print(" //_ \| | | | __/ _ \ /    \ / _ \ \ / / _ \ '__|")
     print("/  _  \ |_| | || (_) / /\/\ \ (_) \ V /  __/ |   ")
     print("\_/ \_/\__,_|\__\___/\/    \/\___/ \_/ \___|_|   by rg\n")
-    print("                                         v1.2\n")
+    print("                                         v1.3\n")
 
 #Main User's Guide - Contains All Product Guidance
 def help():
@@ -185,28 +185,31 @@ def transformer(fileName):
       f.write(columnName)
       f.close()
     
-   autoLoader(fileName)
+#   autoLoader(fileName)
 
-#Connects to Automox API and Uploads the CSV
-def autoLoader(fileName):
-    org_id = "Automox-OrgID" #SENSITIVE - Paste your Automox orgID here
-    type = "patch"
-    url = "https://console.automox.com/api/orgs/" + org_id + "/tasks/" + type + "/batches/upload"
-
-    m = MultipartEncoder(
-        fields={'file': (fileName, open(fileName, 'rb'), 'text/plain')} #, 'format': (None, "Generic Report")} //Does not work.
-    )
-
-    headers = {
-    "Content-Type": m.content_type,
-    "Authorization": "Bearer Automox-API-Key", #HIGHLY SENSITIVE - Paste your Automox API Key Here
-    }
-
-    response = requests.post(url, headers=headers, data=m)
-
-    responseData = response.json()
-    print("\nJSON Results returned from the server can be found below.\n")
-    print(responseData)
+##################################################################
+##         Connects to Automox API and Uploads the CSV      ######
+##No longer works after August/September Automox API updates######
+##################################################################
+#def autoLoader(fileName):
+#    org_id = "ORG-ID-GOES-HERE" #SENSITIVE - Paste your Automox orgID here
+#    url = "https://console.automox.com/api/orgs/" + org_id + "/remediations/action-sets/upload"
+#
+#    m = MultipartEncoder(
+#        fields={'source': 'generic', 'format': 'generic', 'file': (fileName, open(fileName, 'rb'), 'text/plain')}
+#    )
+#
+#    headers = {
+#    "Content-Type": m.content_type,
+#    "Authorization": "Bearer AUTOMOX-API-KEY-GOES-HERE", #HIGHLY SENSITIVE - Paste your Automox API Key Here
+#    }
+#
+#    response = requests.post(url, headers=headers, data=m)
+#
+#    responseData = response.json()
+#    print("\nJSON Results returned from the server can be found below.\n")
+#    print(responseData)
+##################################################################
 
 #Function to Get Vulnerability Metrics from Defender and Append to Local Spreadsheet
 def vulnStats():
