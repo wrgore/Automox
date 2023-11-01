@@ -75,24 +75,24 @@ def queryBuilder():
     elif severity == "quit" or severity == "q" or severity == "-q" or severity == "exit":
         exit()
     elif severity  == 'Critical' or severity == 'High' or severity == 'Medium' or severity == 'Low':
-        kql = (f"let automoxDevices = dynamic({device_list}); DeviceTvmSoftwareVulnerabilitiesKB | join DeviceTvmSoftwareVulnerabilities on CveId | where DeviceName in~ (automoxDevices) | where VulnerabilitySeverityLevel =~ '{severity}' | summarize by DeviceName, CveId, VulnerabilitySeverityLevel, PublishedDate, IsExploitAvailable, SoftwareName, SoftwareVersion, VulnerabilityDescription, RecommendedSecurityUpdate")
+        kql = (f"let devices = dynamic({device_list}); DeviceTvmSoftwareVulnerabilitiesKB | join DeviceTvmSoftwareVulnerabilities on CveId | extend Computer = split(DeviceName,'.').[0] | where Computer in~ (devices) | where VulnerabilitySeverityLevel =~ '{severity}' | summarize by DeviceName, CveId, VulnerabilitySeverityLevel, PublishedDate, IsExploitAvailable, SoftwareName, SoftwareVersion, VulnerabilityDescription, RecommendedSecurityUpdate")
     elif len(severityList) == 2:
          if severityList[0] and severityList[1] in validInput:
-            kql = (f"let automoxDevices = dynamic({device_list}); DeviceTvmSoftwareVulnerabilitiesKB | join DeviceTvmSoftwareVulnerabilities on CveId | where DeviceName in~ (automoxDevices) | where VulnerabilitySeverityLevel =~ '{severityList[0]}' or  VulnerabilitySeverityLevel =~ '{severityList[1]}'| summarize by DeviceName, CveId, VulnerabilitySeverityLevel, PublishedDate, IsExploitAvailable, SoftwareName, SoftwareVersion, VulnerabilityDescription, RecommendedSecurityUpdate")
+            kql = (f"let devices = dynamic({device_list}); DeviceTvmSoftwareVulnerabilitiesKB | join DeviceTvmSoftwareVulnerabilities on CveId | extend Computer = split(DeviceName,'.').[0] | where Computer in~ (devices) | where VulnerabilitySeverityLevel =~ '{severityList[0]}' or  VulnerabilitySeverityLevel =~ '{severityList[1]}'| summarize by DeviceName, CveId, VulnerabilitySeverityLevel, PublishedDate, IsExploitAvailable, SoftwareName, SoftwareVersion, VulnerabilityDescription, RecommendedSecurityUpdate")
          else:
             print("\n[!] Invalid input. Please refer to the help page for proper usage by typing -h.\n\nRe-initializing program...")
             main()
     elif len(severityList) == 3:
          if severityList[0] and severityList[1] and severityList[2] in validInput:
-            kql = (f"let automoxDevices = dynamic({device_list}); DeviceTvmSoftwareVulnerabilitiesKB | join DeviceTvmSoftwareVulnerabilities on CveId | where DeviceName in~ (automoxDevices) | where VulnerabilitySeverityLevel =~ '{severityList[0]}' or  VulnerabilitySeverityLevel =~ '{severityList[1]}' or  VulnerabilitySeverityLevel =~ '{severityList[2]}'| summarize by DeviceName, CveId, VulnerabilitySeverityLevel, PublishedDate, IsExploitAvailable, SoftwareName, SoftwareVersion, VulnerabilityDescription, RecommendedSecurityUpdate")
+            kql = (f"let devices = dynamic({device_list}); DeviceTvmSoftwareVulnerabilitiesKB | join DeviceTvmSoftwareVulnerabilities on CveId | extend Computer = split(DeviceName,'.').[0] | where Computer in~ (devices) | where VulnerabilitySeverityLevel =~ '{severityList[0]}' or  VulnerabilitySeverityLevel =~ '{severityList[1]}' or  VulnerabilitySeverityLevel =~ '{severityList[2]}'| summarize by DeviceName, CveId, VulnerabilitySeverityLevel, PublishedDate, IsExploitAvailable, SoftwareName, SoftwareVersion, VulnerabilityDescription, RecommendedSecurityUpdate")
          else:
             print("\n[!] Invalid input. Please refer to the help page for proper usage by typing -h.\n\nRe-initializing program...")
             main()
     elif len(severityList) == 4 or severity == "All":
         if severityList[0] == "All":
-            kql = (f"let automoxDevices = dynamic({device_list}); DeviceTvmSoftwareVulnerabilitiesKB | join DeviceTvmSoftwareVulnerabilities on CveId | where DeviceName in~ (automoxDevices) | summarize by DeviceName, CveId, VulnerabilitySeverityLevel, PublishedDate, IsExploitAvailable, SoftwareName, SoftwareVersion, VulnerabilityDescription, RecommendedSecurityUpdate")
+            kql = (f"let devices = dynamic({device_list}); DeviceTvmSoftwareVulnerabilitiesKB | join DeviceTvmSoftwareVulnerabilities on CveId | extend Computer = split(DeviceName,'.').[0] | where Computer in~ (devices) | summarize by DeviceName, CveId, VulnerabilitySeverityLevel, PublishedDate, IsExploitAvailable, SoftwareName, SoftwareVersion, VulnerabilityDescription, RecommendedSecurityUpdate")
         elif severityList[0] and severityList[1] and severityList[2] and severityList[3] in validInput:
-            kql = (f"let automoxDevices = dynamic({device_list}); DeviceTvmSoftwareVulnerabilitiesKB | join DeviceTvmSoftwareVulnerabilities on CveId | where DeviceName in~ (automoxDevices) | summarize by DeviceName, CveId, VulnerabilitySeverityLevel, PublishedDate, IsExploitAvailable, SoftwareName, SoftwareVersion, VulnerabilityDescription, RecommendedSecurityUpdate")
+            kql = (f"let devices = dynamic({device_list}); DeviceTvmSoftwareVulnerabilitiesKB | join DeviceTvmSoftwareVulnerabilities on CveId | extend Computer = split(DeviceName,'.').[0] | where Computer in~ (devices) | summarize by DeviceName, CveId, VulnerabilitySeverityLevel, PublishedDate, IsExploitAvailable, SoftwareName, SoftwareVersion, VulnerabilityDescription, RecommendedSecurityUpdate")
         else:
             print("\n[!] Invalid input. Please refer to the help page for proper usage by typing -h.\n\nRe-initializing program...")
             main()
@@ -156,22 +156,24 @@ def vulnStats():
 
     totalSystems = len(device_list) #Get Total Systems
     
-    #Count Total Vulnerable Systems [0]
-    statQuery.append(f"let devices = dynamic({device_list}); DeviceTvmSoftwareVulnerabilities | where DeviceName in~ (devices) | summarize Total = count_distinct(DeviceId)")
-    #Count of all Vulnerabilities by Severity [0]
-    statQuery.append(f"let devices = dynamic({device_list}); DeviceTvmSoftwareVulnerabilities | where DeviceName in~ (devices) | where VulnerabilitySeverityLevel =~ 'Critical' or VulnerabilitySeverityLevel =~ 'High' or VulnerabilitySeverityLevel =~ 'Medium' or VulnerabilitySeverityLevel =~ 'Low' | summarize Vulns=count() by VulnerabilitySeverityLevel |sort by VulnerabilitySeverityLevel asc")
-    #Count of Vulnerabilities Outside of Acceptable Remediation Timeline by Severity [1]
-    statQuery.append(f"let devices = dynamic({device_list}); DeviceTvmSoftwareVulnerabilitiesKB | join DeviceTvmSoftwareVulnerabilities on CveId | where DeviceName in~ (devices) | where (VulnerabilitySeverityLevel =~ 'Critical' and PublishedDate < ago(14d)) or (VulnerabilitySeverityLevel =~ 'High' and PublishedDate < ago(45d)) or (VulnerabilitySeverityLevel =~ 'Medium' and PublishedDate < ago(90d)) or (VulnerabilitySeverityLevel =~ 'Low' and PublishedDate < ago(90d)) | summarize Total = count() by VulnerabilitySeverityLevel | sort by VulnerabilitySeverityLevel asc")
-    #Count of Systems with Vulnerabilities by Severity [2]
-    statQuery.append(f"let devices = dynamic({device_list}); DeviceTvmSoftwareVulnerabilities | where DeviceName in~ (devices) | where VulnerabilitySeverityLevel =~ 'Critical' or VulnerabilitySeverityLevel =~ 'High' or VulnerabilitySeverityLevel =~ 'Medium' or VulnerabilitySeverityLevel =~ 'Low' | summarize Total = count_distinct(DeviceId) by VulnerabilitySeverityLevel | sort by VulnerabilitySeverityLevel asc")
-    #Count of Systems with Vulnerabilities Outside of Acceptable Remediation Timeline by Severity [3]
-    statQuery.append(f"let devices = dynamic({device_list}); DeviceTvmSoftwareVulnerabilitiesKB | join DeviceTvmSoftwareVulnerabilities on CveId | where DeviceName in~ (devices) | where (VulnerabilitySeverityLevel =~ 'Critical' and PublishedDate < ago(14d)) or (VulnerabilitySeverityLevel =~ 'High' and PublishedDate < ago(45d)) or (VulnerabilitySeverityLevel =~ 'Medium' and PublishedDate < ago(90d)) or (VulnerabilitySeverityLevel =~ 'Low' and PublishedDate < ago(90d)) | summarize Total = count_distinct(DeviceId) by VulnerabilitySeverityLevel | sort by VulnerabilitySeverityLevel asc")
-    #Percent of Devices with Critical Vulnerabilities Outside of 14 Days [4]
-    statQuery.append(f"let devices = dynamic({device_list}); DeviceTvmSoftwareVulnerabilitiesKB | join DeviceTvmSoftwareVulnerabilities on CveId | where DeviceName in~ (devices) | where (VulnerabilitySeverityLevel =~ 'Critical' and PublishedDate < ago(14d)) | summarize Metric = (count_distinct(DeviceId) * 100) / {totalSystems} ")
-    #Percent of Devices with High Vulnerabilities Outside of 45 Days [5]
-    statQuery.append(f"let devices = dynamic({device_list}); DeviceTvmSoftwareVulnerabilitiesKB | join DeviceTvmSoftwareVulnerabilities on CveId | where DeviceName in~ (devices) | where (VulnerabilitySeverityLevel =~ 'High' and PublishedDate < ago(45d)) | summarize Metric = (count_distinct(DeviceId) * 100) / {totalSystems} ")
-    #Percent of Devices with Critical Vulnerabilities Outside of 90 Days [6]
-    statQuery.append(f"let devices = dynamic({device_list}); DeviceTvmSoftwareVulnerabilitiesKB | join DeviceTvmSoftwareVulnerabilities on CveId | where DeviceName in~ (devices) | where (VulnerabilitySeverityLevel =~ 'Medium' and PublishedDate < ago(90d)) or (VulnerabilitySeverityLevel =~ 'Low' and PublishedDate < ago(90d)) | summarize Metric = (count_distinct(DeviceId) * 100) / {totalSystems} ")
+    #Count Total Systems Matching Requirements [0]
+    statQuery.append(f"let devices = dynamic({device_list}); DeviceTvmSoftwareVulnerabilities | extend Computer = split(DeviceName,'.').[0] | where Computer in~ (devices) | summarize Total = count_distinct(DeviceId)")
+    #Count Total Vulnerable Systems [1]
+    statQuery.append(f"let devices = dynamic({device_list}); DeviceTvmSoftwareVulnerabilities | extend Computer = split(DeviceName,'.').[0] | where Computer in~ (devices) | where VulnerabilitySeverityLevel =~ 'Critical' or VulnerabilitySeverityLevel =~ 'High' or VulnerabilitySeverityLevel =~ 'Medium' or VulnerabilitySeverityLevel =~ 'Low' | summarize Total = count_distinct(DeviceId)")
+    #Count of all Vulnerabilities by Severity [2]
+    statQuery.append(f"let devices = dynamic({device_list}); DeviceTvmSoftwareVulnerabilities | extend Computer = split(DeviceName,'.').[0] | where Computer in~ (devices) | where VulnerabilitySeverityLevel =~ 'Critical' or VulnerabilitySeverityLevel =~ 'High' or VulnerabilitySeverityLevel =~ 'Medium' or VulnerabilitySeverityLevel =~ 'Low' | summarize Vulns=count() by VulnerabilitySeverityLevel |sort by VulnerabilitySeverityLevel asc")
+    #Count of Vulnerabilities Outside of Acceptable Remediation Timeline by Severity [3]
+    statQuery.append(f"let devices = dynamic({device_list}); DeviceTvmSoftwareVulnerabilitiesKB | join DeviceTvmSoftwareVulnerabilities on CveId | extend Computer = split(DeviceName,'.').[0] | where Computer in~ (devices) | where (VulnerabilitySeverityLevel =~ 'Critical' and PublishedDate < ago(14d)) or (VulnerabilitySeverityLevel =~ 'High' and PublishedDate < ago(45d)) or (VulnerabilitySeverityLevel =~ 'Medium' and PublishedDate < ago(90d)) or (VulnerabilitySeverityLevel =~ 'Low' and PublishedDate < ago(90d)) | summarize Total = count() by VulnerabilitySeverityLevel | sort by VulnerabilitySeverityLevel asc")
+    #Count of Systems with Vulnerabilities by Severity [4]
+    statQuery.append(f"let devices = dynamic({device_list}); DeviceTvmSoftwareVulnerabilities | extend Computer = split(DeviceName,'.').[0] | where Computer in~ (devices) | where VulnerabilitySeverityLevel =~ 'Critical' or VulnerabilitySeverityLevel =~ 'High' or VulnerabilitySeverityLevel =~ 'Medium' or VulnerabilitySeverityLevel =~ 'Low' | summarize Total = count_distinct(DeviceId) by VulnerabilitySeverityLevel | sort by VulnerabilitySeverityLevel asc")
+    #Count of Systems with Vulnerabilities Outside of Acceptable Remediation Timeline by Severity [5]
+    statQuery.append(f"let devices = dynamic({device_list}); DeviceTvmSoftwareVulnerabilitiesKB | join DeviceTvmSoftwareVulnerabilities on CveId | extend Computer = split(DeviceName,'.').[0] | where Computer in~ (devices) | where (VulnerabilitySeverityLevel =~ 'Critical' and PublishedDate < ago(14d)) or (VulnerabilitySeverityLevel =~ 'High' and PublishedDate < ago(45d)) or (VulnerabilitySeverityLevel =~ 'Medium' and PublishedDate < ago(90d)) or (VulnerabilitySeverityLevel =~ 'Low' and PublishedDate < ago(90d)) | summarize Total = count_distinct(DeviceId) by VulnerabilitySeverityLevel | sort by VulnerabilitySeverityLevel asc")
+    #Percent of Devices with Critical Vulnerabilities Outside of 14 Days [6]
+    statQuery.append(f"let devices = dynamic({device_list}); DeviceTvmSoftwareVulnerabilitiesKB | join DeviceTvmSoftwareVulnerabilities on CveId | extend Computer = split(DeviceName,'.').[0] | where Computer in~ (devices) | where (VulnerabilitySeverityLevel =~ 'Critical' and PublishedDate < ago(14d)) | summarize Metric = (count_distinct(DeviceId) * 100) / {totalSystems} ")
+    #Percent of Devices with High Vulnerabilities Outside of 45 Days [7]
+    statQuery.append(f"let devices = dynamic({device_list}); DeviceTvmSoftwareVulnerabilitiesKB | join DeviceTvmSoftwareVulnerabilities on CveId | extend Computer = split(DeviceName,'.').[0] | where Computer in~ (devices) | where (VulnerabilitySeverityLevel =~ 'High' and PublishedDate < ago(45d)) | summarize Metric = (count_distinct(DeviceId) * 100) / {totalSystems} ")
+    #Percent of Devices with Critical Vulnerabilities Outside of 90 Days [8]
+    statQuery.append(f"let devices = dynamic({device_list}); DeviceTvmSoftwareVulnerabilitiesKB | join DeviceTvmSoftwareVulnerabilities on CveId | extend Computer = split(DeviceName,'.').[0] | where Computer in~ (devices) | where (VulnerabilitySeverityLevel =~ 'Medium' and PublishedDate < ago(90d)) or (VulnerabilitySeverityLevel =~ 'Low' and PublishedDate < ago(90d)) | summarize Metric = (count_distinct(DeviceId) * 100) / {totalSystems} ")
     
     url = "https://api.securitycenter.microsoft.com/api/advancedqueries/run"
     headers = { 
@@ -195,36 +197,38 @@ def vulnStats():
 
     print(f"\nTotal Systems: {totalSystems}")
 
-    print(f"\nTotal Vulnerable Systems:" + str(stats[0]).replace("[{'Total':","").replace("}]",""))
+    print(f"\nTotal System Matches:" + str(stats[0]).replace("[{'Total':","").replace("}]",""))
+
+    print(f"\nTotal Vulnerable Systems:" + str(stats[1]).replace("[{'Total':","").replace("}]",""))
 
     print(f"\nTotal Vulnerabilities\n")
-    print(str(stats[1][0]).replace("{'VulnerabilitySeverityLevel': ", "").replace("'", "").replace("Vulns:", "").replace(","," - ").replace("}", ""))
-    print(str(stats[1][1]).replace("{'VulnerabilitySeverityLevel': ", "").replace("'", "").replace("Vulns:", "").replace(","," - ").replace("}", ""))
-    print(str(stats[1][3]).replace("{'VulnerabilitySeverityLevel': ", "").replace("'", "").replace("Vulns:", "").replace(","," - ").replace("}", ""))
-    print(str(stats[1][2]).replace("{'VulnerabilitySeverityLevel': ", "").replace("'", "").replace("Vulns:", "").replace(","," - ").replace("}", ""))
+    print(str(stats[2][0]).replace("{'VulnerabilitySeverityLevel': ", "").replace("'", "").replace("Vulns:", "").replace(","," - ").replace("}", ""))
+    print(str(stats[2][1]).replace("{'VulnerabilitySeverityLevel': ", "").replace("'", "").replace("Vulns:", "").replace(","," - ").replace("}", ""))
+    print(str(stats[2][3]).replace("{'VulnerabilitySeverityLevel': ", "").replace("'", "").replace("Vulns:", "").replace(","," - ").replace("}", ""))
+    print(str(stats[2][2]).replace("{'VulnerabilitySeverityLevel': ", "").replace("'", "").replace("Vulns:", "").replace(","," - ").replace("}", ""))
 
     print(f"\nVulnerabilities Past Due Date\n")
-    print(str(stats[2][0]).replace("{'VulnerabilitySeverityLevel': ", "").replace("'", "").replace("Total:", "").replace(","," - ").replace("}", ""))
-    print(str(stats[2][1]).replace("{'VulnerabilitySeverityLevel': ", "").replace("'", "").replace("Total:", "").replace(","," - ").replace("}", ""))
-    print(str(stats[2][3]).replace("{'VulnerabilitySeverityLevel': ", "").replace("'", "").replace("Total:", "").replace(","," - ").replace("}", ""))
-    print(str(stats[2][2]).replace("{'VulnerabilitySeverityLevel': ", "").replace("'", "").replace("Total:", "").replace(","," - ").replace("}", ""))
-
-    print(f"\nTotal Vulnerable Systems\n")
     print(str(stats[3][0]).replace("{'VulnerabilitySeverityLevel': ", "").replace("'", "").replace("Total:", "").replace(","," - ").replace("}", ""))
     print(str(stats[3][1]).replace("{'VulnerabilitySeverityLevel': ", "").replace("'", "").replace("Total:", "").replace(","," - ").replace("}", ""))
     print(str(stats[3][3]).replace("{'VulnerabilitySeverityLevel': ", "").replace("'", "").replace("Total:", "").replace(","," - ").replace("}", ""))
     print(str(stats[3][2]).replace("{'VulnerabilitySeverityLevel': ", "").replace("'", "").replace("Total:", "").replace(","," - ").replace("}", ""))
 
-    print(f"\nTotal Vulnerable Systems Past Due\n")
+    print(f"\nTotal Vulnerable Systems\n")
     print(str(stats[4][0]).replace("{'VulnerabilitySeverityLevel': ", "").replace("'", "").replace("Total:", "").replace(","," - ").replace("}", ""))
     print(str(stats[4][1]).replace("{'VulnerabilitySeverityLevel': ", "").replace("'", "").replace("Total:", "").replace(","," - ").replace("}", ""))
     print(str(stats[4][3]).replace("{'VulnerabilitySeverityLevel': ", "").replace("'", "").replace("Total:", "").replace(","," - ").replace("}", ""))
     print(str(stats[4][2]).replace("{'VulnerabilitySeverityLevel': ", "").replace("'", "").replace("Total:", "").replace(","," - ").replace("}", ""))
 
+    print(f"\nTotal Vulnerable Systems Past Due\n")
+    print(str(stats[5][0]).replace("{'VulnerabilitySeverityLevel': ", "").replace("'", "").replace("Total:", "").replace(","," - ").replace("}", ""))
+    print(str(stats[5][1]).replace("{'VulnerabilitySeverityLevel': ", "").replace("'", "").replace("Total:", "").replace(","," - ").replace("}", ""))
+    print(str(stats[5][3]).replace("{'VulnerabilitySeverityLevel': ", "").replace("'", "").replace("Total:", "").replace(","," - ").replace("}", ""))
+    print(str(stats[5][2]).replace("{'VulnerabilitySeverityLevel': ", "").replace("'", "").replace("Total:", "").replace(","," - ").replace("}", ""))
+
     print(f"\nKey Performance Indicators\n")
-    print(f"Percent of Assets with Critical Vulnerabilities Older than 14 Days: " + str(stats[5]).replace("[{'Metric': ", "").replace("}]", "%"))
-    print(f"Percent of Assets with High Vulnerabilities Older than 45 Days: " + str(stats[6]).replace("[{'Metric': ", "").replace("}]", "%"))
-    print(f"Percent of Assets with Low or Medium Vulnerabilities Older than 90 Days: " + str(stats[7]).replace("[{'Metric': ", "").replace("}]", "%"))
+    print(f"Percent of Assets with Critical Vulnerabilities Older than 14 Days: " + str(stats[6]).replace("[{'Metric': ", "").replace("}]", "%"))
+    print(f"Percent of Assets with High Vulnerabilities Older than 45 Days: " + str(stats[7]).replace("[{'Metric': ", "").replace("}]", "%"))
+    print(f"Percent of Assets with Low or Medium Vulnerabilities Older than 90 Days: " + str(stats[8]).replace("[{'Metric': ", "").replace("}]", "%"))
     print("----------------------------------------------------------------------------------------------------------------\n")
 
 #Primary Flow Control Function
